@@ -1,0 +1,224 @@
+#!/usr/bin/python3
+import os
+import sys
+from PyQt5.QtWidgets import *
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5 import *
+ 
+
+
+##---LANGUAGE---##
+#--Syntax--#
+# elif language == "LOCALE_CODE":
+#     openbutt = "TRANSLATION"
+#     runbutt = "TRANSLATION"
+#     ckboxlang = "TRANSLATION"
+#--START--#
+language = os.environ["LANG"]
+
+if language == "de_DE.UTF-8":
+    metaname = "Metadaten"
+    tabname = "Steuerung"
+    viewname = "Bild anzeigen"
+    openbutt = "Ordner öffnen"
+    runbutt = "Start"
+    ckboxlang = "In Ordner %YYYY%_%MM%_%TT% verschieben"
+elif language == "ru_RU.UTF-8":
+    metaname = "Мета-данные"
+    tabname = "Управление"
+    viewname = "Просмотр изображения"
+    openbutt = "Открыть папку"
+    runbutt = "Начать"
+    ckboxlang = "Отправить в папку %YYYY%_%MM%_%DD%"
+elif language == "uk_UA.UTF-8":
+    metaname = "Мета-данні"
+    tabname = "Керування"
+    viewname = "Перегляд фотографії"
+    openbutt = "Відкрити папку"
+    runbutt = "Почати"
+    ckboxlang = "Пересунути в папку  %YYYY%_%MM%_%DD%"
+else:
+    metaname = "Meta data"
+    tabname = "Main tool"
+    viewname = "View image"
+    openbutt = "Open folder"
+    runbutt = "Run"
+    ckboxlang = "Move to folder %YYYY%_%MM%_%DD%"
+    
+##---END---##
+    
+icon1 = '/usr/share/FMDS/icons/window.png' 
+
+class App(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.title = 'FMDS - Exif sorter'
+        self.left = 20
+        self.top = 50
+        self.width = 700
+        self.height = 500
+        self.initUI()
+        self.tree.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.tree.customContextMenuRequested.connect(self.context_menu)
+    def initUI(self):
+        self.tabs = QTabWidget()
+        self.tabs.setTabsClosable(True)
+        self.tabs.tabCloseRequested.connect(self.closetab)
+        self.mainlayout = QVBoxLayout()
+        self.maintab = QWidget()
+        self.tabs.addTab(self.maintab, tabname)
+        self.button_get=QPushButton(openbutt)
+        self.button_get.clicked.connect(self.getfolder)
+        self.ckbox = QCheckBox(ckboxlang)
+        self.button_start = QPushButton(runbutt)
+        self.button_start.clicked.connect(self.start)
+        self.setWindowTitle(self.title)
+        self.setGeometry(self.left, self.top, self.width, self.height)
+        self.model = QFileSystemModel()
+        self.model.setRootPath("")
+        self.tree = QTreeView()
+        
+        self.tree.setModel(self.model)
+        
+        self.tree.setAnimated(True)
+        self.tree.setIndentation(20)
+        self.tree.setSortingEnabled(True)
+        self.tree.setRootIndex(self.model.index(""))
+        self.tree.setWindowTitle("Dir View")
+        self.tree.resize(700, 480)
+       
+        self.QLineEdit= QLineEdit()
+        self.windowsH = QHBoxLayout()
+        windowLayout = QVBoxLayout()
+        windowLayout.addWidget(self.QLineEdit)
+        windowLayout.addWidget(self.button_get)
+        windowLayout.addWidget(self.tree)
+        windowLayout.addLayout(self.windowsH)
+        windowLayout.addWidget(self.button_start)
+          
+        self.windowsH.addWidget(self.ckbox)
+        self.setWindowIcon(QIcon(icon1))
+        
+        self.maintab.setLayout(windowLayout)
+        self.mainlayout.addWidget(self.tabs)
+        self.setLayout(self.mainlayout)
+ 
+        self.show()
+    def context_menu(self):
+        menu = QMenu()
+        open = menu.addAction("Open")
+        open.triggered.connect(self.imageopen)
+        meta = menu.addAction("View meta data")
+        meta.triggered.connect(self.metaview)
+        cursor = QCursor()
+        menu.exec_(cursor.pos())
+    def imageopen(self):
+        index = self.tree.currentIndex()
+        file_name = self.model.filePath(index)
+        print(file_name)
+        self.viewtab = QWidget()
+        i2 = self.tabs.addTab(self.viewtab, viewname)
+        self.tabs.setCurrentIndex(i2)                             
+        viewlayout = QHBoxLayout()
+        label = QLabel()
+        
+        self.file_name2 = str(file_name)
+        ifendimg = self.file_name2.endswith((".png", ".jpg"))
+        
+        ifendvid = self.file_name2.endswith(('.mp4', '.3gp', '.avi'))
+                                     
+        print(ifendimg)
+        print(ifendvid)
+        if ifendimg == True:
+            viewlayout.addWidget(label)
+            label.setPixmap(QPixmap(self.file_name2))
+        else:
+            print('Format not supported')
+
+
+        self.viewtab.setLayout(viewlayout)
+
+    def metaview(self):
+        index = self.tree.currentIndex()
+        file_name = self.model.filePath(index)
+        print(file_name)
+        self.meta = QWidget()
+        i2 = self.tabs.addTab(self.meta, metaname)
+        self.tabs.setCurrentIndex(i2)                             
+        metalayout = QHBoxLayout()
+        metalabel = QPlainTextEdit()
+        
+
+        metalayout.addWidget(metalabel)
+        
+        
+        self.file_name2 = str(file_name)
+        
+        print('1')
+        os.system("""echo '""" + self.file_name2 + """' > $HOME/.cache/fmds_path""")
+        print('2')
+        os.system("bash /usr/share/FMDS/scripts/script.sh")
+        print('3')
+        pathtometa = os.environ["HOME"]
+        print(pathtometa)
+        path = pathtometa + "/.cache/fmds_mime"
+        print(path)
+        try:
+            with open(path, 'r') as f:
+                text = f.read()
+                    
+
+        except Exception as e:
+            self.dialog_critical(str(e))
+       
+                    
+            
+        else:
+            self.path = path
+            metalabel.setPlainText(text)      
+            
+        print('5')
+        
+
+
+        self.meta.setLayout(metalayout)
+
+        
+
+    def ercute(self):
+        error = player.errorString()
+        print(error)
+       
+    def getfolder(self):
+        self.my_dir = QFileDialog.getExistingDirectory(
+        self,
+        openbutt,
+        '',
+        QFileDialog.ShowDirsOnly
+        ) 
+        self.QLineEdit.setText(self.my_dir)
+        self.model.setRootPath(self.my_dir)
+        self.tree.setRootIndex(self.model.index(self.my_dir))
+
+    def start(self):
+        if self.ckbox.isChecked() == True:
+            movevar = "move"
+        else:
+            movevar = "rename"
+        path = self.QLineEdit.text()
+        os.system('cd "' + path + '" && cp /usr/share/FMDS/scripts/run.sh run.sh && bash run.sh && rm run.sh || rm run.sh ' + movevar)
+
+
+    def closetab(self, i2):
+        if self.tabs.count() < 2:
+            return
+        self.tabs.removeTab(i2)
+        
+        
+        
+
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
+    ex = App()
+    sys.exit(app.exec_())

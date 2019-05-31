@@ -1,0 +1,10 @@
+#!/usr/bin/env xdg-open
+[Desktop Entry]
+Name=FMDS
+Comment=FMDS File Meta Data Arrayer
+Exec= /usr/bin/fmds
+Terminal=true
+Icon=/usr/share/FMDS/icons/window.png
+Type=Application
+Categories=Graphics;Utility;
+Name[ru_RU]=FMDS
