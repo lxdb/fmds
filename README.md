@@ -1,8 +1,7 @@
 # fmds
 FMDS Source Code
 -----------------------------------------------
-FMDS:
-https://lxdbdatabase.wordpress.com/fmds
+FMDS:https://de.lxdb.de/fmds
 -----------------------------------------------
 Build:
 
